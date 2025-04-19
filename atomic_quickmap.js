@@ -1,0 +1,35 @@
+const quickmap=new Map(
+[
+    ['flex','{display:flex}'],
+    ['grid','{display:grid}'],
+    ['block','{display:block}'],
+    ['inlineBlock','{display:inline-block}'],
+    ['static','{position:static}'],
+    ['relative','{position:relative}'],
+    ['absolute','{position:absolute}'],
+    ['fixed','{position:fixed}'],
+    ['sticky','{position:sticky}'],
+    ['w','width'],
+    ['h','height'],
+    ['maxW','max-width'],
+    ['maxH','max-height'],
+    ['minW','min-width'],
+    ['minH','min-height'],
+    ['m','margin'],
+    ['p','padding'],
+    ['mt','margin-top'],
+    ['mb','margin-bottom'],
+    ['ml','margin-left'],
+    ['mr','margin-right'],
+    ['pt','padding-top'],
+    ['pb','padding-bottom'],
+    ['pl','padding-left'],
+    ['pr','padding-right'],
+    ['bg','background'],
+    ['textLeft','{text-align:left}'],
+    ['textRight','{text-align:right}'],
+    ['textCenter','{text-align:center}'],
+]
+);
+
+module.exports=quickmap;
