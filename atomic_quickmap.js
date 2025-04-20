@@ -1,14 +1,17 @@
 const quickmap=new Map(
 [
-    ['flex','{display:flex}'],
-    ['grid','{display:grid}'],
-    ['block','{display:block}'],
-    ['inlineBlock','{display:inline-block}'],
-    ['static','{position:static}'],
-    ['relative','{position:relative}'],
-    ['absolute','{position:absolute}'],
-    ['fixed','{position:fixed}'],
-    ['sticky','{position:sticky}'],
+    ['flex','display:flex'],
+    ['grid','display:grid'],
+    ['block','display:block'],
+    ['inlineBlock','display:inline-block'],
+    ['static','position:static'],
+    ['relative','position:relative'],
+    ['absolute','position:absolute'],
+    ['fixed','position:fixed'],
+    ['sticky','position:sticky'],
+    ['textLeft','text-align:left'],
+    ['textRight','text-align:right'],
+    ['textCenter','text-align:center'],
     ['w','width'],
     ['h','height'],
     ['maxW','max-width'],
@@ -26,10 +29,19 @@ const quickmap=new Map(
     ['pl','padding-left'],
     ['pr','padding-right'],
     ['bg','background'],
-    ['textLeft','{text-align:left}'],
-    ['textRight','{text-align:right}'],
-    ['textCenter','{text-align:center}'],
 ]
 );
-
-module.exports=quickmap;
+const prefixmap=new Map([
+    ['sm','@media (max-width: 640px)'],
+    ['md','@media (max-width: 768px)'],
+    ['lg','@media (max-width: 1024px)'],
+    ['hover','hover'],
+    ['active','active'],
+    ['focus','focus'],
+    ['focusWithin','focus-within'],
+    ['first','first'],
+    ['last','last'],
+    ['even','even'],
+    ['odd','odd'],
+]);
+module.exports={quickmap,prefixmap};
