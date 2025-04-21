@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
 const knownProps = require('known-css-properties').all;
 const path = require('path');
-const {prefixmap,quickmap} = require('./atomic_quickmap');
+const {prefixmap,quickmap,configmap} = require('./atomic_quickmap');
 
 const filePath = process.argv[2];//监听到的变化文件
 
@@ -79,33 +79,38 @@ extractClassNames(filePath).then(async(result) =>{
     let curClassStyle='';
     for (let c of result) {
       if (!existingContent.includes(`.${c}{`)) {
-        let [name, value] = c.split('-');
-        let prefix = '';
-        let v='';
-        const prefixobj = parseColonPair(name);
-        if(prefixobj){
-          prefix=prefixobj.prefix;
-          name=prefixobj.key;
-        }
-        
-        if (isCssProperty(camelCaseToDashCase(name)) && value) {
-          // 检查类名是否已经存在
-          curClassStyle=`.${c}{${camelCaseToDashCase(name)}:${value}}\n`;
-          v=`${camelCaseToDashCase(name)}:${value}`;
-        }else if(quickmap.has(name) && value){
-          curClassStyle=`.${c}{${quickmap.get(name)}:${value}}\n`;
-          v=`${quickmap.get(name)}:${value}`;
-        }else if(quickmap.has(name) && !value){
-          curClassStyle=`.${c}{${quickmap.get(name)}}\n`;
-          v=`${quickmap.get(name)}`;
-        }else continue;
+        //判断是否为用户自定义类
+        if(configmap.has(c)){
+          curClassStyle=`.${c}${configmap.get(c)}\n`;
+        }else{ 
+          let [name, value] = c.split('-');
+          let prefix = '';
+          let v='';
+          const prefixobj = parseColonPair(name);
+          if(prefixobj){
+            prefix=prefixobj.prefix;
+            name=prefixobj.key;
+          }
+          
+          if (isCssProperty(camelCaseToDashCase(name)) && value) {
+            // 检查类名是否已经存在
+            curClassStyle=`.${c}{${camelCaseToDashCase(name)}:${value}}\n`;
+            v=`${camelCaseToDashCase(name)}:${value}`;
+          }else if(quickmap.has(name) && value){
+            curClassStyle=`.${c}{${quickmap.get(name)}:${value}}\n`;
+            v=`${quickmap.get(name)}:${value}`;
+          }else if(quickmap.has(name) && !value){
+            curClassStyle=`.${c}{${quickmap.get(name)}}\n`;
+            v=`${quickmap.get(name)}`;
+          }else continue;
 
-        if(prefix.length>0 && prefixmap.has(prefix)){//有前缀的处理
-          const prefixValue=prefixmap.get(prefix);
-          if(prefixValue.includes('@media')){//媒体查询
-            curClassStyle=`${prefixmap.get(prefix)}{\n.${prefix}\\:${name+(value?'-'+value:'')}{${v}}\n}\n`;
-          }else if(prefixValue==prefix){//伪类
-            curClassStyle=`.${prefix}\\:${name+(value?'-'+value:'')}:${prefixValue}{${v}}\n`;
+          if(prefix.length>0 && prefixmap.has(prefix)){//有前缀的处理
+            const prefixValue=prefixmap.get(prefix);
+            if(prefixValue.includes('@media')){//媒体查询
+              curClassStyle=`${prefixmap.get(prefix)}{\n.${prefix}\\:${name+(value?'-'+value:'')}{${v}}\n}\n`;
+            }else if(prefixValue==prefix){//伪类
+              curClassStyle=`.${prefix}\\:${name+(value?'-'+value:'')}:${prefixValue}{${v}}\n`;
+            }
           }
         }
 

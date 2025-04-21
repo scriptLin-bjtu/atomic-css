@@ -32,16 +32,21 @@ const quickmap=new Map(
 ]
 );
 const prefixmap=new Map([
-    ['sm','@media (max-width: 640px)'],
-    ['md','@media (max-width: 768px)'],
-    ['lg','@media (max-width: 1024px)'],
+    ['sm','@media (min-width: 640px)'],
+    ['md','@media (min-width: 768px)'],
+    ['lg','@media (min-width: 1024px)'],
     ['hover','hover'],
     ['active','active'],
     ['focus','focus'],
     ['focusWithin','focus-within'],
+    ['visited','visited'],
+    ['checked','checked'],
     ['first','first'],
     ['last','last'],
     ['even','even'],
     ['odd','odd'],
 ]);
-module.exports={quickmap,prefixmap};
+const configmap=new Map([
+    ['darkMode','{background-color: #333; color: #fff}'],
+]);
+module.exports={quickmap,prefixmap,configmap};
