@@ -32,9 +32,10 @@ const quickmap=new Map(
 ]
 );
 const prefixmap=new Map([
-    ['sm','@media (min-width: 640px)'],
-    ['md','@media (min-width: 768px)'],
-    ['lg','@media (min-width: 1024px)'],
+    ['sm','@media (min-width:640px)'],
+    ['md','@media (min-width:768px)'],
+    ['lg','@media (min-width:1024px)'],
+    ['dark','@media (prefers-color-scheme:dark)'],
     ['hover','hover'],
     ['active','active'],
     ['focus','focus'],
@@ -46,7 +47,5 @@ const prefixmap=new Map([
     ['even','even'],
     ['odd','odd'],
 ]);
-const configmap=new Map([
-    ['darkMode','{background-color: #333; color: #fff}'],
-]);
-module.exports={quickmap,prefixmap,configmap};
+
+module.exports={quickmap,prefixmap};

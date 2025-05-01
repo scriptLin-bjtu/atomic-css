@@ -1,11 +1,12 @@
 const fs = require('fs').promises;
 const knownProps = require('known-css-properties').all;
 const path = require('path');
-const {prefixmap,quickmap,configmap} = require('./atomic_quickmap');
+const {prefixmap,quickmap} = require('./atomic_quickmap');
+const {configStyle,darkMode} = require('./atomic.config');
 
 const filePath = process.argv[2];//监听到的变化文件
 
-const rootCssPath = path.join(__dirname, '_atomic.css');
+const rootCssPath = path.join(__dirname, 'atomic.style.css');
 
 function camelCaseToDashCase(string) {
     return string.replace(/[A-Z]/g, match => '-' + match.toLowerCase());
@@ -16,11 +17,11 @@ function isCssProperty(prop) {
 }
 
 function parseColonPair(str) {
-  const match = str.match(/^(.+?):(.+)$/);
-  if (match) {
+  const match = str.split(':');
+  if (match.length>1) {
     return {
-      prefix: match[1],
-      key: match[2]
+      prefixs: match.slice(0,-1),
+      key: match[match.length-1]
     };
   } else {
     return false;
@@ -62,13 +63,13 @@ async function appendToFile(filePath, content) {
 
 extractClassNames(filePath).then(async(result) =>{
   try {
-    // 先读取 _atomic.css 文件的内容
+    // 先读取 atomic.style.css 文件的内容
     let existingContent = '';
     try {
       existingContent = await fs.readFile(rootCssPath, 'utf-8');
     } catch (err) {
       if (err.code !== 'ENOENT') {
-        console.error('读取 _atomic.css 文件出错：', err);
+        console.error('读取 atomic.style.css 文件出错：', err);
         return;
       }
       // 如果文件不存在，初始化为空字符串
@@ -77,40 +78,54 @@ extractClassNames(filePath).then(async(result) =>{
 
     let content = ``;
     let curClassStyle='';
-    for (let c of result) {
+    outer: for (let c of result) {
       if (!existingContent.includes(`.${c}{`)) {
         //判断是否为用户自定义类
-        if(configmap.has(c)){
-          curClassStyle=`.${c}${configmap.get(c)}\n`;
+        if(configStyle.has(c)){
+          curClassStyle=`.${c}${configStyle.get(c)}\n`;
         }else{ 
-          let [name, value] = c.split('-');
-          let prefix = '';
+          let [name, ...values] = c.split('-');
+          let prefixs = null;
           let v='';
           const prefixobj = parseColonPair(name);
           if(prefixobj){
-            prefix=prefixobj.prefix;
+            prefixs=prefixobj.prefixs;
             name=prefixobj.key;
           }
           
-          if (isCssProperty(camelCaseToDashCase(name)) && value) {
+          if (isCssProperty(camelCaseToDashCase(name)) && values.length>0) {
             // 检查类名是否已经存在
-            curClassStyle=`.${c}{${camelCaseToDashCase(name)}:${value}}\n`;
-            v=`${camelCaseToDashCase(name)}:${value}`;
-          }else if(quickmap.has(name) && value){
-            curClassStyle=`.${c}{${quickmap.get(name)}:${value}}\n`;
-            v=`${quickmap.get(name)}:${value}`;
-          }else if(quickmap.has(name) && !value){
+            curClassStyle=`.${c}{${camelCaseToDashCase(name)}:${values.join(' ')}}\n`;
+            v=`${camelCaseToDashCase(name)}:${values.join(' ')}`;
+          }else if(quickmap.has(name) && values.length>0){
+            curClassStyle=`.${c}{${quickmap.get(name)}:${s.join(' ')}}\n`;
+            v=`${quickmap.get(name)}:${values.join(' ')}`;
+          }else if(quickmap.has(name) && values.length==0){
             curClassStyle=`.${c}{${quickmap.get(name)}}\n`;
             v=`${quickmap.get(name)}`;
           }else continue;
 
-          if(prefix.length>0 && prefixmap.has(prefix)){//有前缀的处理
-            const prefixValue=prefixmap.get(prefix);
-            if(prefixValue.includes('@media')){//媒体查询
-              curClassStyle=`${prefixmap.get(prefix)}{\n.${prefix}\\:${name+(value?'-'+value:'')}{${v}}\n}\n`;
-            }else if(prefixValue==prefix){//伪类
-              curClassStyle=`.${prefix}\\:${name+(value?'-'+value:'')}:${prefixValue}{${v}}\n`;
+          if(prefixs){//有前缀的处理
+            let prefixspart='';
+            let pseudopart='';
+            let darkpart='';
+            let mediapart='@media';
+            for(let i=0;i<prefixs.length;i++){
+              if(!prefixmap.has(prefixs[i])){//如果前缀不对就跳过这个类处理
+                console.error(`前缀写法错误，忽略类名：${c}`);
+                continue outer;
+              }
+              prefixspart+=prefixs[i]+'\\:';
+              const prefixValue=prefixmap.get(prefixs[i]);
+              if(prefixs[i]=='dark'&&darkMode=='selector'&&!darkpart){//暗黑模式selector处理
+                darkpart=`.dark `;
+              }else if(prefixValue.includes('@media')){//媒体查询
+                mediapart+=mediapart=='@media'?prefixValue.split(' ')[1]:`and${prefixValue.split(' ')[1]}`;
+              }else if(prefixValue==prefixs[i]){//伪类
+                pseudopart+=`:${prefixValue}`;
+              }
             }
+            curClassStyle=mediapart!=='@media'?`${mediapart}{\n${darkpart}.${prefixspart}${name+(values.length>0?'-'+values.join('-'):'')}${pseudopart}{${v}}\n}\n`: `${darkpart}.${prefixspart}${name+(values.length>0?'-'+values.join('-'):'')}${pseudopart}{${v}}\n`;
           }
         }
 
@@ -121,7 +136,7 @@ extractClassNames(filePath).then(async(result) =>{
       }
     }
 
-    // 追加内容到根目录的 _atomic.css
+    // 追加内容到根目录的 atomic.style.css
     if (content) {
       await appendToFile(rootCssPath, content);
     }
